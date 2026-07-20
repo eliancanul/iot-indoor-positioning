@@ -82,6 +82,13 @@ def distancia(p1, p2):
     return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
 
+def calcular_error(lista, real):
+    """Promedio de errores de distancia de una lista de puntos contra el punto real."""
+    if not lista:
+        return 0
+    return sum(distancia(p, real) for p in lista) / len(lista)
+
+
 # ============================================================
 # STORE DE DATOS POR ÁREA (thread-safe)
 # ============================================================
