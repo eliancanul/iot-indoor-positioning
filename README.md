@@ -252,6 +252,7 @@ el procedimiento de credenciales locales.
 - [ADR 0001: radio-map balanceado](docs/adr/0001-balanced-radiomap-dataset.md).
 - [ADR 0002: contexto físico explícito](docs/adr/0002-explicit-capture-context.md).
 - [Flujo seguro de auditoría y derivación](docs/agents/database-workflow.md).
+- [Gate previo a fingerprinting RSSI](docs/agents/fingerprinting-gate.md).
 
 El modelo de fingerprinting sigue bloqueado hasta completar las campañas,
 verificar cobertura y fijar validaciones sin leakage.
