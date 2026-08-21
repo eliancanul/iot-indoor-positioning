@@ -3,3 +3,15 @@ __pycache__/
 *.pyc
 .DS_Store
 iot_platform.db
+
+*.bak
+# Local MQTT credentials and operational artifacts
+REPORTE_MIGRACION_MQTTS.md
+esp32_mqtts.7z
+nul
+*.key
+*.pem
+*.p12
+*.pfx
+*.csr
+*.srl

@@ -205,14 +205,14 @@ def render_admin_panel():
                         with col_acciones:
                             with st.popover("✏️ Editar", use_container_width=True):
                                 st.markdown("**Editar ESP32**")
-                                e_node = st.text_input("Node ID", value=esp['node_id'], key=f"en_{esp['id']}")
-                                e_topic = st.text_input("Tópico", value=esp['topic'], key=f"et_{esp['id']}")
+                                e_node = st.text_input("Node ID", value=esp['node_id'], key=f"esp_en_{esp['id']}")
+                                e_topic = st.text_input("Tópico", value=esp['topic'], key=f"esp_et_{esp['id']}")
                                 col_ex, col_ey = st.columns(2)
                                 with col_ex:
-                                    e_x = st.number_input("X", value=float(esp['pos_x']), key=f"ex_{esp['id']}")
+                                    e_x = st.number_input("X", value=float(esp['pos_x']), key=f"esp_ex_{esp['id']}")
                                 with col_ey:
-                                    e_y = st.number_input("Y", value=float(esp['pos_y']), key=f"ey_{esp['id']}")
-                                e_rssi = st.number_input("RSSI @1m", value=float(esp['rssi_1m']), key=f"er_{esp['id']}")
+                                    e_y = st.number_input("Y", value=float(esp['pos_y']), key=f"esp_ey_{esp['id']}")
+                                e_rssi = st.number_input("RSSI @1m", value=float(esp['rssi_1m']), key=f"esp_er_{esp['id']}")
 
                                 area_opts = {a['id']: a['nombre'] for a in db.listar_areas()}
                                 e_area = st.selectbox(
@@ -220,12 +220,12 @@ def render_admin_panel():
                                     options=list(area_opts.keys()),
                                     format_func=lambda x: area_opts[x],
                                     index=list(area_opts.keys()).index(esp['area_id']) if esp['area_id'] in area_opts else 0,
-                                    key=f"ea_{esp['id']}",
+                                    key=f"esp_ea_{esp['id']}",
                                 )
 
-                                if st.button("Guardar", key=f"save_e_{esp['id']}", use_container_width=True):
+                                if st.button("Guardar", key=f"esp_save_e_{esp['id']}", use_container_width=True):
                                     try:
-                                        db.actualizar_esp32(e_node, e_topic, e_x, e_y, e_rssi, e_area)
+                                        db.actualizar_esp32(esp['id'], e_node, e_topic, e_x, e_y, e_rssi, e_area)
                                         st.success("ESP32 actualizado.")
                                         st.rerun()
                                     except Exception as ex:
