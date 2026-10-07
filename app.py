@@ -11,6 +11,7 @@ import database as db
 import mqtt_manager
 import admin_panel
 import calibration
+from comparison_panel import render_comparison_panel
 
 
 def _monitor_reference_position(manager, area_id, area):
@@ -32,9 +33,11 @@ st.set_page_config(page_title="Plataforma IoT | UQROO", page_icon="📡", layout
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
     footer {visibility: hidden;}
-    .block-container { padding-top: 2rem; padding-bottom: 2rem; }
+    .block-container { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 1250px; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #0f766e !important; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; transform: none !important; } }
+    @media (max-width: 600px) { .block-container { padding: 1.25rem 1rem; } }
     .stButton>button {
         border-radius: 8px; font-weight: 600; transition: all 0.3s ease;
     }
@@ -85,9 +88,10 @@ else:
     st.sidebar.markdown("<h2 style='color: #1F618D;'>📡 Plataforma IoT</h2>", unsafe_allow_html=True)
     pagina = st.sidebar.radio(
         "Navegación:",
-        ["🖥️ Monitoreo", "🔬 Calibración", "⚙️ Administración", "🔧 Configuración"]
+        ["📍 Comparar", "🖥️ Monitoreo", "🔬 Calibración", "⚙️ Administración", "🔧 Configuración"]
     )
 
+    st.sidebar.caption("Captura con contexto físico. Compara con datos reservados.")
     st.sidebar.markdown("---")
     if st.sidebar.button("🚪 Cerrar Sesión", use_container_width=True):
         st.session_state.autenticado = False
@@ -96,7 +100,10 @@ else:
     # ============================================================
     # PÁGINA: ADMINISTRACIÓN (FASE 3)
     # ============================================================
-    if pagina == "⚙️ Administración":
+    if pagina == "📍 Comparar":
+        render_comparison_panel()
+
+    elif pagina == "⚙️ Administración":
         admin_panel.render_admin_panel()
 
     # ============================================================
@@ -200,6 +207,9 @@ else:
             format_func=lambda value: capture_area_map[value],
             key="capture_context_area",
         )
+        if capture_area_id is None:
+            st.info("Crea un área en Administración antes de preparar una campaña.")
+            st.stop()
         capture_area = db.obtener_area(capture_area_id)
         whole_width = abs(float(capture_area["ancho"]) - round(float(capture_area["ancho"]))) < 1e-9
         whole_height = abs(float(capture_area["alto"]) - round(float(capture_area["alto"]))) < 1e-9
