@@ -4,9 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-# UI/network dependencies are irrelevant to math and DB behavior under test.
-st = types.ModuleType('streamlit')
-sys.modules['streamlit'] = st
+# Stub MQTT only; replacing Streamlit globally breaks real UI integration tests.
 mqtt = types.ModuleType('paho.mqtt.client')
 mqtt.CallbackAPIVersion = types.SimpleNamespace(VERSION2=2)
 mqtt.Client = object
