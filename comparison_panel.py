@@ -61,6 +61,7 @@ def render_comparison_panel():
         try:
             train, test, split = split_dataset(dataset, mode, position)
         except DatasetError as exc:
+            st.session_state.pop("lab_result", None)
             st.error(str(exc))
             return
         st.write(f"{len(train)} para entrenar · {len(test)} para probar · {len(split['unused_ids'])} reservadas sin usar")

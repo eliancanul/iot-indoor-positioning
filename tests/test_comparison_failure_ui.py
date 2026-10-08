@@ -1,4 +1,4 @@
-"""Regression for a failed repeated comparison, isolated from MQTT and user data."""
+"""Comparison failures invalidate reports, isolated from MQTT and user data."""
 import os
 from pathlib import Path
 import subprocess
@@ -88,13 +88,31 @@ app.button(key="lab_compare").click().run()
 assert not app.exception
 previous = app.session_state["lab_result"]
 assert previous["samples"] and app.dataframe and app.get("download_button")
-with patch.object(panel, "compare", side_effect=panel.DatasetError("Synthetic comparison failure")):
-    app.button(key="lab_compare").click().run()
-assert not app.exception
-assert [e.value for e in app.error] == ["Synthetic comparison failure"]
-assert "lab_result" not in app.session_state
-assert not any(m.label == "Error medio" for m in app.metric)
-assert not app.dataframe and not app.get("download_button")
+
+def assert_no_result():
+    assert not app.exception
+    assert "lab_result" not in app.session_state
+    assert not any(m.label == "Error medio" for m in app.metric)
+    assert not app.dataframe and not app.get("download_button")
+
+scenario = sys.argv[3]
+assert scenario in {"recalculate", "partition"}
+if scenario == "partition":
+    with patch.object(panel, "compare", wraps=panel.compare) as comparison_calls:
+        with patch.object(panel, "split_dataset", side_effect=panel.DatasetError("Synthetic partition failure")):
+            app.radio(key="lab_evaluation").set_value("Una posición no aprendida").run()
+        assert [e.value for e in app.error] == ["Synthetic partition failure"]
+        assert_no_result()
+        app.radio(key="lab_evaluation").set_value("Otra sesión o campaña").run()
+        app.run()
+        assert_no_result()
+        assert not app.error
+        assert comparison_calls.call_count == 0
+else:
+    with patch.object(panel, "compare", side_effect=panel.DatasetError("Synthetic comparison failure")):
+        app.button(key="lab_compare").click().run()
+    assert [e.value for e in app.error] == ["Synthetic comparison failure"]
+    assert_no_result()
 app.button(key="lab_compare").click().run()
 assert not app.exception and not app.error
 assert app.session_state["lab_result"] == previous
@@ -102,17 +120,23 @@ assert app.session_state["lab_result"] == previous
 
 
 class ComparisonFailureUITest(unittest.TestCase):
-    def test_failed_repeat_clears_previous_result_and_allows_retry(self):
+    def run_probe(self, scenario):
         root = Path(__file__).resolve().parents[1]
         env = {k: v for k, v in os.environ.items()
                if k in {"PATH", "SYSTEMROOT", "WINDIR", "LANG", "LC_ALL"}}
         env["PYTHONDONTWRITEBYTECODE"] = "1"
         with tempfile.TemporaryDirectory(prefix="comparison-regression-") as work:
             result = subprocess.run(
-                [sys.executable, "-c", PROBE, str(root), work],
+                [sys.executable, "-c", PROBE, str(root), work, scenario],
                 cwd=work, env=env, capture_output=True, text=True, timeout=90,
             )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_failed_repeat_clears_previous_result_and_allows_retry(self):
+        self.run_probe("recalculate")
+
+    def test_failed_partition_does_not_restore_result_on_return(self):
+        self.run_probe("partition")
 
 
 if __name__ == "__main__":
