@@ -61,6 +61,7 @@ def render_comparison_panel():
         try:
             train, test, split = split_dataset(dataset, mode, position)
         except DatasetError as exc:
+            st.session_state.pop("lab_result", None)
             st.error(str(exc))
             return
         st.write(f"{len(train)} para entrenar · {len(test)} para probar · {len(split['unused_ids'])} reservadas sin usar")
@@ -73,6 +74,7 @@ def render_comparison_panel():
         if st.session_state.get("lab_signature") != signature:
             st.session_state.pop("lab_result", None)
         if st.button("Comparar los tres métodos", type="primary", disabled=not reviewed, key="lab_compare"):
+            st.session_state.pop("lab_result", None)
             try:
                 with st.spinner("Evaluando las mismas capturas en los tres métodos…"):
                     st.session_state.lab_result = compare(dataset, mode, position, k, depth)
