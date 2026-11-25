@@ -1,5 +1,13 @@
 # IoT Indoor Positioning
 
+> **English summary.** Streamlit + SQLite platform that collects ESP32 RSSI
+> readings over MQTT and builds an auditable dataset (radio-map) for indoor
+> positioning. The offline suite has 38 `unittest` tests in 15 files covering
+> the capture transaction, the normalized SQLite schema, the RSSI quality
+> policy, deduplication, the read-only database audit and the derived dataset.
+> It needs no hardware, no MQTT broker and no third-party packages. The rest
+> of this document is in Spanish.
+
 Plataforma para recolectar lecturas RSSI de ESP32 mediante MQTT y construir,
 posteriormente, un radio-map para posicionamiento en interiores.
 
@@ -228,6 +236,19 @@ python -m unittest discover -s tests -p "test_*.py" -v
 python -m compileall -q .
 git diff --check
 ```
+
+La suite contiene 38 pruebas `unittest` en 15 archivos y termina en menos de
+un segundo. Usa solo la biblioteca estándar: no necesita ESP32, broker MQTT ni
+las dependencias de la aplicación, porque el cliente MQTT se sustituye por un
+doble de prueba y SQLite corre sobre archivos temporales. Cubre:
+
+- la transacción de captura y sus metadatos de campaña y sesión;
+- el esquema SQLite normalizado y la espera ante bloqueos de escritura;
+- la política de calidad RSSI (`eligible` / `dirty`) y la deduplicación;
+- el guard de activación MQTT y el rechazo de capturas sin sesión física o
+  sin posición objetivo explícita;
+- los diagnósticos geométricos (triángulos y círculos);
+- la auditoría de solo lectura y la derivación determinista del dataset.
 
 ## Seguridad y archivos locales
 
