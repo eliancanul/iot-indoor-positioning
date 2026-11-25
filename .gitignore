@@ -15,3 +15,14 @@ nul
 *.pfx
 *.csr
 *.srl
+
+# Local capture exports, reports and isolated environments
+.venv/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+exports/
+reports/
+comparacion*.json
+*comparison.json

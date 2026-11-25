@@ -19,8 +19,10 @@ from typing import Any, Iterable
 
 try:
     from .audit_database import audit_database
+    from .evaluation_metadata import evaluation_context
 except ImportError:  # ejecución directa: python tools/derive_dataset.py
     from audit_database import audit_database
+    from evaluation_metadata import evaluation_context
 
 
 @dataclass(frozen=True)
@@ -439,6 +441,7 @@ def _feature_columns(anchor_ids: list[str]) -> list[str]:
 def _row(record: dict[str, Any], anchor_ids: list[str], feature_columns: list[str]) -> dict[str, Any]:
     row: dict[str, Any] = {
         "sample_id": record["sample_id"],
+        "area_id": record["area_id"],
         "session_id": record["session_id"],
         "campaign_id": record.get("campaign_id"),
         "captured_at": record.get("captured_at"),
@@ -467,7 +470,7 @@ def _row(record: dict[str, Any], anchor_ids: list[str], feature_columns: list[st
         }
         row.update(values)
     return {column: row.get(column) for column in (
-        "sample_id", "session_id", "campaign_id", "captured_at", "cycle_number",
+        "sample_id", "area_id", "session_id", "campaign_id", "captured_at", "cycle_number",
         "window_start_at", "window_end_at", "window_skew_s",
         "capture_quality_status", "x_real", "y_real", "status", "dirty_reasons", "environment_tag",
         "orientation", "layout_version", *feature_columns,
@@ -505,6 +508,7 @@ def derive_dataset(
     try:
         samples, anchor_ids = _read_samples(conn)
         campaign_positions = _read_campaign_positions(conn)
+        context = evaluation_context(conn, samples, anchor_ids, audit)
     finally:
         conn.close()
 
@@ -520,7 +524,7 @@ def derive_dataset(
 
     feature_columns = _feature_columns(anchor_ids)
     metadata_columns = [
-        "sample_id", "session_id", "campaign_id", "captured_at", "cycle_number",
+        "sample_id", "area_id", "session_id", "campaign_id", "captured_at", "cycle_number",
         "window_start_at", "window_end_at", "window_skew_s",
         "capture_quality_status", "status", "dirty_reasons", "environment_tag", "orientation", "layout_version",
     ]
@@ -563,6 +567,9 @@ def derive_dataset(
     )
 
     manifest = {
+        "training_sha256": _sha256(training_path),
+        "samples_sha256": _sha256(classified_path),
+        "evaluation_context": context,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": audit["database"],
         "source_sha256": audit["source_sha256"],

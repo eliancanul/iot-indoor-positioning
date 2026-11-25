@@ -1,20 +1,23 @@
 # IoT Indoor Positioning
 
 Plataforma para recolectar lecturas RSSI de ESP32 mediante MQTT y construir,
-posteriormente, un radio-map para posicionamiento en interiores.
+un radio-map para posicionamiento en interiores.
 
 El proyecto mantiene dos caminos separados:
 
 - **Estimación geométrica**: triángulos y círculos. Se conserva como baseline y
   diagnóstico.
-- **Fingerprinting RSSI**: aprendizaje posterior de la relación entre el
-  patrón RSSI y la posición real. Todavía no se entrena ni se conecta al flujo
-  MQTT en vivo.
+- **Fingerprinting RSSI**: comparación offline con WkNN y árbol de decisión binario
+  sobre las mismas medianas RSSI. Demo sintética disponible; los exports reales
+  deben superar el gate de calidad. No se conecta al flujo MQTT en vivo.
 
 ## Estado actual
 
 La implementación actual permite:
 
+- comparar WkNN, árbol de decisión y círculos con holdout por sesión/campaña;
+- reservar una posición completa para comprobar generalización espacial;
+- revisar media, mediana, P90 y cobertura en un mapa y tabla accesible;
 - administrar áreas y anchors ESP32 desde la UI;
 - calibrar `rssi_1m` y `n_pathloss` por nodo;
 - conectarse a MQTT y suscribirse dinámicamente por área;
@@ -136,7 +139,7 @@ python -m venv .venv
 # Linux/macOS
 source .venv/bin/activate
 
-pip install streamlit paho-mqtt matplotlib numpy
+pip install -r requirements.txt
 ```
 
 La base SQLite local se crea como `iot_platform.db` en el directorio del
@@ -145,8 +148,12 @@ proyecto. Ese archivo está excluido de Git.
 ## Ejecutar la aplicación
 
 ```bash
-streamlit run app.py
+streamlit run app.py --server.address 127.0.0.1
 ```
+
+**Comparar** es la pantalla inicial y no conecta MQTT. Prueba la demo sin
+hardware o consulta el [recorrido offline](docs/offline-comparison.md).
+El login legacy `admin/admin` es de prototipo; no expongas el servidor públicamente.
 
 La configuración MQTT se establece desde **Configuración**. No se deben
 escribir credenciales reales en el código, firmware, scripts o documentación.
@@ -219,7 +226,8 @@ La derivación produce:
 - `samples.csv`: todas las muestras clasificadas;
 - `training.csv`: selección balanceada y determinista;
 - `coverage.json`: cobertura por posición, sesión y campaña;
-- `manifest.json`: política, features, etiquetas, conteos, IDs y hashes.
+- `manifest.json`: política, features, etiquetas, conteos, IDs, hashes y contexto
+  mínimo verificable para evaluación offline.
 
 ## Pruebas
 
@@ -254,5 +262,7 @@ el procedimiento de credenciales locales.
 - [Flujo seguro de auditoría y derivación](docs/agents/database-workflow.md).
 - [Gate previo a fingerprinting RSSI](docs/agents/fingerprinting-gate.md).
 
-El modelo de fingerprinting sigue bloqueado hasta completar las campañas,
-verificar cobertura y fijar validaciones sin leakage.
+La inferencia MQTT de fingerprinting sigue bloqueada. El laboratorio offline
+permite desarrollo y demo sintética; no declara aprobado el dataset histórico.
+Consulta [ADR 0003](docs/adr/0003-offline-fingerprinting-comparison.md) y el
+[protocolo de comparación](docs/offline-comparison.md).

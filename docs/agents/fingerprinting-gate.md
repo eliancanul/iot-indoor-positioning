@@ -5,6 +5,16 @@ modelo de fingerprinting RSSI. Es un gate operativo: mientras los criterios
 no estén cumplidos, no se debe entrenar un modelo ni añadir inferencia de
 fingerprinting al flujo MQTT en vivo.
 
+## Alcance revisado para el laboratorio offline
+
+[ADR 0003](../adr/0003-offline-fingerprinting-comparison.md) reabre la
+implementación de WkNN y árbol de decisión en un laboratorio aislado: permite
+pruebas sintéticas y entrenamiento efímero sobre exports que pasan el gate y
+han sido revisados por el operador. Esto no declara listas las capturas
+históricas, no registra modelos ni activa inferencia de fingerprinting en MQTT.
+Las restricciones de abajo se conservan para datos reales que no pasan el gate
+y para el flujo de producción en vivo. La demo se identifica siempre como tal.
+
 ## Estado actual
 
 La plataforma ya tiene implementados:
@@ -78,5 +88,6 @@ No se debe:
 5. Fijar particiones espacial y temporal sin leakage.
 6. Solo después abrir el trabajo de baselines offline y evaluación de modelos.
 
-La implementación de fingerprinting queda deliberadamente pendiente hasta que
-este documento pueda marcar el gate como cumplido con evidencia verificable.
+La activación de fingerprinting en vivo queda pendiente hasta marcar este gate
+como cumplido con evidencia verificable. Implementar y probar el laboratorio
+offline no equivale a esa aprobación.
